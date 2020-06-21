@@ -48,6 +48,7 @@ function handleImage(e) {
 }
 
 function generate() {
+    // console.log(Module);
     var imageCanvas = document.querySelector('#imageCanvas');
     imageCanvas.style.opacity = 0.25;
 
@@ -84,7 +85,7 @@ function downloadIset() {
     let filenameFset = "asa.fset";
     let filenameFset3 = "asa.fset3";
 
-    let ext = ".iset";
+    let ext = ".zft";
     let ext2 = ".fset";
     let ext3 = ".fset3";
 
@@ -92,29 +93,64 @@ function downloadIset() {
     let contentFset = Module.FS.readFile(filenameFset);
     let contentFset3 = Module.FS.readFile(filenameFset3);
 
+    let iset = buf2hex(content.buffer);
+    let fset = buf2hex(contentFset.buffer);
+    let fset3 = buf2hex(contentFset3.buffer);
+
+    // console.log(iset);
+
+    let obj = {
+        iset: iset,
+        fset: fset,
+        fset3: fset3
+    }
+
+
+    // let obj = {
+    //     iset: iset.toString('hex'),
+    //     fset: fset.toString('hex'),
+    //     fset3: fset3.toString('hex')
+    // }
+
+    let strObj = JSON.stringify(obj);
+
+    let StrBufferZip = Module._malloc(strObj.length + 1);
+    Module.writeStringToMemory(strObj, StrBufferZip);
+    
+    Module._compressZip(StrBufferZip, strObj.length);
+    
+    let contentBin = Module.FS.readFile("tempBinFile.bin");
+
+    Module._free(StrBufferZip);
+
     var a = document.createElement('a');
     a.download = name + ext;
-    a.href = URL.createObjectURL(new Blob([content], { type: mime }));
+    a.href = URL.createObjectURL(new Blob([contentBin], { type: mime }));
     a.style.display = 'none';
 
-    var b = document.createElement('a');
-    b.download = name + ext2;
-    b.href = URL.createObjectURL(new Blob([contentFset], { type: mime }));
-    b.style.display = 'none';
+    // var a = document.createElement('a');
+    // a.download = name + ext;
+    // a.href = URL.createObjectURL(new Blob([content], { type: mime }));
+    // a.style.display = 'none';
 
-    var c = document.createElement('a');
-    c.download = name + ext3;
-    c.href = URL.createObjectURL(new Blob([contentFset3], { type: mime }));
-    c.style.display = 'none';
+    // var b = document.createElement('a');
+    // b.download = name + ext2;
+    // b.href = URL.createObjectURL(new Blob([contentFset], { type: mime }));
+    // b.style.display = 'none';
+
+    // var c = document.createElement('a');
+    // c.download = name + ext3;
+    // c.href = URL.createObjectURL(new Blob([contentFset3], { type: mime }));
+    // c.style.display = 'none';
 
     document.body.appendChild(a);
     a.click();
 
-    document.body.appendChild(b);
-    b.click();
+    // document.body.appendChild(b);
+    // b.click();
 
-    document.body.appendChild(c);
-    c.click();
+    // document.body.appendChild(c);
+    // c.click();
 
     var spinner = document.querySelector('.spinner-container');
     spinner.style.display = 'none';
@@ -303,4 +339,8 @@ function getHistogram(arr){
         hist[arr[i]]++;
     }
     return hist;
+}
+
+function buf2hex(buffer) {
+    return Array.prototype.map.call(new Uint8Array(buffer), x => ('00' + x.toString(16)).slice(-2)).join('');
 }

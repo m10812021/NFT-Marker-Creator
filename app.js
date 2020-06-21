@@ -119,7 +119,7 @@ Module.onRuntimeInitialized = function(){
 
     let StrBuffer = Module._malloc(paramStr.length + 1);
     Module.writeStringToMemory(paramStr, StrBuffer);
-      
+    
     let heapSpace = Module._malloc(imageData.array.length * imageData.array.BYTES_PER_ELEMENT);
     Module.HEAPU8.set(imageData.array, heapSpace);
 
@@ -140,9 +140,28 @@ Module.onRuntimeInitialized = function(){
     let contentFset = Module.FS.readFile(filenameFset);
     let contentFset3 = Module.FS.readFile(filenameFset3);
 
-    fs.writeFileSync(path.join(__dirname, '/output/') + fileName + ext, content);
-    fs.writeFileSync(path.join(__dirname, '/output/') + fileName + ext2, contentFset);
-    fs.writeFileSync(path.join(__dirname, '/output/') + fileName + ext3, contentFset3);
+    let iset = Buffer.from(content.buffer);
+    let fset = Buffer.from(contentFset.buffer);
+    let fset3 = Buffer.from(contentFset3.buffer);
+
+    let obj = {
+        iset: iset.toString('hex'),
+        fset: fset.toString('hex'),
+        fset3: fset3.toString('hex')
+    }
+
+    let strObj = JSON.stringify(obj);
+
+    let StrBufferZip = Module._malloc(strObj.length + 1);
+    Module.writeStringToMemory(strObj, StrBufferZip);
+    
+    Module._compressZip(StrBufferZip, strObj.length);
+    
+    let contentBin = Module.FS.readFile("tempBinFile.bin");
+
+    fs.writeFileSync(path.join(__dirname, '/output/') + fileName + ".zft", contentBin);
+
+    Module._free(StrBufferZip);
 
     if(!noDemo){
         console.log("\nFinished marker creation!\nNow configuring demo! \n")
@@ -162,17 +181,16 @@ Module.onRuntimeInitialized = function(){
         const files = fs.readdirSync(markerDir);
         for (const file of files) {
             fs.unlink(path.join(markerDir, file), err => {
-              if (err) throw err;
+            if (err) throw err;
             });
         }
-    
-        fs.writeFileSync(markerDir + fileName + ext, content);
-        fs.writeFileSync(markerDir + fileName + ext2, contentFset);
-        fs.writeFileSync(markerDir + fileName + ext3, contentFset3);
+        
+        fs.writeFileSync(markerDir + fileName + ".zft", contentBin);
     
         console.log("Finished!\nTo run demo use: 'npm run demo'");
     }
 }
+
 
 function useJPG(buf) {
     
