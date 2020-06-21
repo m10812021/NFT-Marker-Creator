@@ -34,6 +34,7 @@ var BUILD_MIN_FILE = 'NftMarkerCreator.min.js';
 
 var MAIN_SOURCES = [
 	'assemble.c',
+	'markerCompress.c'
 ];
 
 MAIN_SOURCES = MAIN_SOURCES.map(function(src) {
@@ -100,6 +101,7 @@ if (HAVE_NFT) {
 	.concat(ar2_sources)
 	.concat(kpm_sources);
 }
+
 
 var DEFINES = ' ';
 if (HAVE_NFT) DEFINES += ' -D HAVE_NFT ';
